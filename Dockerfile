@@ -30,7 +30,7 @@ ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH=/opt/m68k/bin:/opt/java/openjdk/bin:/opt/sgdk/bin:$PATH
 RUN apt-get update && apt-get install -y --no-install-recommends unzip \
     libfontconfig1 libfreetype6 && rm -rf /var/lib/apt/lists/*
-COPY scripts/build-sgdk.sh /build/
+COPY scripts/build-sgdk.sh scripts/patch-sgdk.py /build/
 RUN /build/build-sgdk.sh
 
 FROM ${BASE_IMAGE} AS toolchain
@@ -48,7 +48,7 @@ COPY --from=sgdk /opt/sources /usr/local/share/sgdk/sources
 COPY --from=debugger /opt/sources/gdb.tar.xz /usr/local/share/sgdk/sources/gdb.tar.xz
 COPY sources.lock.json /usr/local/share/sgdk/sources.lock.json
 COPY debugger.lock.json /usr/local/share/sgdk/debugger.lock.json
-COPY scripts/fetch-sources.py scripts/build-compiler.sh scripts/build-sgdk.sh scripts/build-debugger.sh /usr/local/share/sgdk/recipes/
+COPY scripts/fetch-sources.py scripts/build-compiler.sh scripts/build-sgdk.sh scripts/build-debugger.sh scripts/patch-sgdk.py /usr/local/share/sgdk/recipes/
 COPY scripts/entrypoint.sh /usr/local/bin/sgdk
 COPY scripts/doctor.sh /usr/local/bin/sgdk-doctor
 RUN chmod a+r /usr/local/share/sgdk/sources/*

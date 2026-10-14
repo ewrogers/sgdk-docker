@@ -44,6 +44,10 @@ def main():
     assert "elf32-m68k" in run("object", ["m68k-elf-objdump", "-f", "smoke.o"])
     debug = run("debugger", ["m68k-elf-gdb", "--batch", "-ex", "file smoke.o", "-ex", "info functions answer"])
     assert "answer" in debug
+    # This upstream VGM includes negative PCM samples. ARM64 used to turn them
+    # into zero because xgmtool converted negative doubles straight to unsigned.
+    run("pcm-conversion", ["xgmtool", "/opt/sgdk/sample/game/platformer/res/sound/sonic2Emerald.vgm", "pcm.bin", "-s"])
+    assert hashlib.sha256((output / "pcm.bin").read_bytes()).hexdigest() == "c464966762d769dbe7b1aa78d495a2847c5133896bc3636dfb9053ac2b1cf49f", "PCM conversion differs from the established AMD64 output"
     samples = ["basics/hello-world", "basics/image", "game/platformer", "snd/sound-test", "snd/xgm-player"]
     results = []
     for sample in samples:

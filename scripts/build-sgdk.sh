@@ -3,6 +3,7 @@ set -eu
 python3 /build/fetch-sources.py sgdk sjasm maccer
 mkdir -p /opt/sgdk /build/sjasm /build/maccer
 tar -xf /opt/sources/sgdk.tar.gz --strip-components=1 -C /opt/sgdk
+python3 /build/patch-sgdk.py
 tar -xf /opt/sources/sjasm.tar.gz --strip-components=1 -C /build/sjasm
 unzip -q /opt/sources/maccer.zip -d /build/maccer
 # Replace Windows binaries and rebuild libraries with this exact GCC version.
