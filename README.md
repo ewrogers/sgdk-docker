@@ -25,6 +25,15 @@ docker run --rm -v "$PWD:/workspace" ewrogers/sgdk:2.11 build debug
 On Linux, add `--user "$(id -u):$(id -g)"` to keep output files owned by your
 account. The image defaults to an unprivileged user. Run emulators on the host.
 
+On Windows, use Docker Desktop's **Linux containers**, preferably with its
+[WSL2 backend](https://docs.docker.com/desktop/features/wsl/). A WSL shell uses
+the commands above. In PowerShell, mount the project with
+`--mount "type=bind,source=$($PWD.Path),target=/workspace"` instead of `-v`.
+Native Windows-container mode is not supported by these Linux images.
+
+The image matrix covers CPU architecture. Linux CI and local macOS tests
+check actual builds; a Windows Docker Desktop smoke test is still needed.
+
 ## Use any tool
 
 Commands and arguments pass through directly:
