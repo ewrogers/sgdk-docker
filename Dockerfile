@@ -20,6 +20,10 @@ COPY debugger.lock.json /build/debugger.lock.json
 COPY scripts/build-debugger.sh /build/
 RUN /build/build-debugger.sh
 
+FROM debugger AS packed-tools
+COPY scripts/strip-host-tools.py /build/
+RUN python3 /build/strip-host-tools.py
+
 FROM compiler AS sgdk
 COPY --from=java /opt/java/openjdk /opt/java/openjdk
 ENV JAVA_HOME=/opt/java/openjdk
@@ -38,7 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && useradd --create-home --uid 1000 --shell /bin/bash sgdk \
     && mkdir /workspace && chown sgdk:sgdk /workspace
 COPY --from=java /opt/java/openjdk /opt/java/openjdk
-COPY --from=debugger /opt/m68k /opt/m68k
+COPY --from=packed-tools /opt/m68k /opt/m68k
 COPY --from=sgdk /opt/sgdk /opt/sgdk
 COPY --from=sgdk /opt/sources /usr/local/share/sgdk/sources
 COPY --from=debugger /opt/sources/gdb.tar.xz /usr/local/share/sgdk/sources/gdb.tar.xz
