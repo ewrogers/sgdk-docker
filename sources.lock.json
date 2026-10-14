@@ -1,0 +1,32 @@
+{
+  "gcc": {
+    "version": "16.2.0",
+    "url": "https://ftp.gnu.org/gnu/gcc/gcc-16.2.0/gcc-16.2.0.tar.xz",
+    "sha256": "e6738e29597f733270731aa90600f37ffdc045079dfc27ec7e8192cc81085c3e",
+    "archive": "gcc.tar.xz"
+  },
+  "binutils": {
+    "version": "2.47",
+    "url": "https://ftp.gnu.org/gnu/binutils/binutils-2.47.tar.xz",
+    "sha256": "154ab23b60070e8f27013c22977f1129425d67d1e8acd6e13010e617811e4cff",
+    "archive": "binutils.tar.xz"
+  },
+  "sgdk": {
+    "version": "2.11",
+    "url": "https://codeload.github.com/Stephane-D/SGDK/tar.gz/ef9292c03fe33a2f8af3a2589ab856a53dcef35c",
+    "sha256": "8904f9bc2f9dd02514bf5e7cc85bb37b5345f74aa9984ae8122a796f6eed9696",
+    "archive": "sgdk.tar.gz"
+  },
+  "sjasm": {
+    "version": "0.39h",
+    "url": "https://codeload.github.com/Konamiman/Sjasm/tar.gz/refs/tags/v0.39h",
+    "sha256": "f12d816c187fb5270b621826bd7b825374ea701a87e5e3d46fb9356109f864b8",
+    "archive": "sjasm.tar.gz"
+  },
+  "maccer": {
+    "version": "2.6-k0.2",
+    "url": "https://gendev.spritesmind.net/files/maccer-026k02.zip",
+    "sha256": "9d73e848053419e6448d0a99274ec68001dc879180392fa333c27f1d3b4e1c18",
+    "archive": "maccer.zip"
+  }
+}
