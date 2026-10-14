@@ -81,6 +81,13 @@ The Container matrix workflow publishes only after both platforms pass. To
 publish from GitHub, configure `DOCKERHUB_TOKEN` and manually run the workflow
 on `main` with publishing enabled. Ordinary pushes and PRs only build/test.
 
+After local tests, `scripts/publish.py` can publish the exact tested image IDs
+using your existing `docker login`:
+
+```sh
+python3 scripts/publish.py --arm64 build/test-arm64/report.json --amd64 build/test-amd64/report.json
+```
+
 The Docker packaging is MIT licensed. SGDK and the bundled GNU/Java tools
 retain their own licenses. GNU source archives and build recipes are included
 under `/usr/local/share/sgdk` for inspection and rebuilding.

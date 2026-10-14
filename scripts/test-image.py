@@ -33,6 +33,7 @@ def main():
     assert ("aarch64" if args.platform.endswith("arm64") else "x86_64") in doctor
     assert "16.2.0" in doctor and "2.47" in doctor and "18.1" in doctor
     assert "SGDK: 2.11" in doctor
+    run("source-access", ["sh", "-c", 'test -r /usr/local/share/sgdk/sources/gcc.tar.xz && test -r /usr/local/share/sgdk/sources/gdb.tar.xz'])
     # The generic entrypoint must preserve arguments and command failures.
     assert run("arguments", ["sh", "-c", 'printf "%s\\n" "$@"', "label", "two words", "semi;colon"]) == "two words\nsemi;colon\n"
     run("command-failure", ["sh", "-c", "exit 17"], expected=17)

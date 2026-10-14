@@ -47,6 +47,7 @@ COPY debugger.lock.json /usr/local/share/sgdk/debugger.lock.json
 COPY scripts/fetch-sources.py scripts/build-compiler.sh scripts/build-sgdk.sh scripts/build-debugger.sh /usr/local/share/sgdk/recipes/
 COPY scripts/entrypoint.sh /usr/local/bin/sgdk
 COPY scripts/doctor.sh /usr/local/bin/sgdk-doctor
+RUN chmod a+r /usr/local/share/sgdk/sources/*
 ENV GDK=/opt/sgdk JAVA_HOME=/opt/java/openjdk
 ENV PATH=/opt/m68k/bin:/opt/java/openjdk/bin:/opt/sgdk/bin:$PATH
 # SGDK 2.11 predates GCC's C23 default. Keep the established C17 dialect.
