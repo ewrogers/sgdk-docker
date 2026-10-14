@@ -1,0 +1,5 @@
+.git
+.cache
+build
+*.tmp.json
+__pycache__
