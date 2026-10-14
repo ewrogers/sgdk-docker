@@ -10,7 +10,8 @@ unzip -q /opt/sources/maccer.zip -d /build/maccer
 find /opt/sgdk/bin -type f \( -name '*.exe' -o -name '*.dll' \) -delete
 rm -f /opt/sgdk/lib/*.a
 gcc -O2 /opt/sgdk/tools/bintos/src/bintos.c -o /opt/sgdk/bin/bintos
-gcc -O2 -I/opt/sgdk/tools/xgmtool/inc /opt/sgdk/tools/xgmtool/src/*.c -lm -o /opt/sgdk/bin/xgmtool
+# ARM64 can fuse PCM resampling arithmetic; use identical rounding on both hosts.
+gcc -O2 -ffp-contract=off -I/opt/sgdk/tools/xgmtool/inc /opt/sgdk/tools/xgmtool/src/*.c -lm -o /opt/sgdk/bin/xgmtool
 g++ -std=c++20 -O2 -I/opt/sgdk/tools/convsym/include /opt/sgdk/tools/convsym/src/main.cpp -o /opt/sgdk/bin/convsym
 cd /build/sjasm/Sjasm
 # Upstream's makefile expects lower case on a case-sensitive Linux filesystem.

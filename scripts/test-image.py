@@ -48,6 +48,9 @@ def main():
     # into zero because xgmtool converted negative doubles straight to unsigned.
     run("pcm-conversion", ["xgmtool", "/opt/sgdk/sample/game/platformer/res/sound/sonic2Emerald.vgm", "pcm.bin", "-s"])
     assert hashlib.sha256((output / "pcm.bin").read_bytes()).hexdigest() == "c464966762d769dbe7b1aa78d495a2847c5133896bc3636dfb9053ac2b1cf49f", "PCM conversion differs from the established AMD64 output"
+    # A sample near a rounding boundary exposed ARM64's fused operations.
+    run("pcm-rounding", ["xgmtool", "/opt/sgdk/sample/snd/xgm-player/res/SMetroid Crateria Surface.vgm", "pcm-rounding.bin", "-s"])
+    assert hashlib.sha256((output / "pcm-rounding.bin").read_bytes()).hexdigest() == "cc2d6ad87a98a16481602de4a6ab91e8338addfd35e2636371eae7e5ae3a95db", "PCM resampling rounding differs between hosts"
     samples = ["basics/hello-world", "basics/image", "game/platformer", "snd/sound-test", "snd/xgm-player"]
     results = []
     for sample in samples:

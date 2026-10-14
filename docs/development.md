@@ -20,7 +20,9 @@ We apply one host portability fix to SGDK's `xgmtool`: negative PCM samples
 are converted to a signed integer before encoding the unsigned byte. The
 original direct floating-point conversion produced silence for those samples
 on ARM64. The fix preserves the established AMD64 output; a PCM regression
-test and matching ROM hashes check both architectures.
+test and matching ROM hashes check both architectures. We also disable fused
+floating-point operations in this converter to keep PCM rounding identical
+between host architectures. Game compilation keeps SGDK's normal flags.
 
 Use `2.11-gcc16.2.0-binutils2.47` to select this toolchain release, `2.11` to
 track tested updates for SGDK 2.11, or `latest` for the current tested release.
