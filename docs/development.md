@@ -24,6 +24,25 @@ test and matching ROM hashes check both architectures. We also disable fused
 floating-point operations in this converter to keep PCM rounding identical
 between host architectures. Game compilation keeps SGDK's normal flags.
 
+GCC 16.2 can incorrectly fold a byte copy into a M68000 instruction that
+increments a pointer before using it again for the destination address.
+This shifted SGDK's uploaded Z80 sound driver by one byte and caused silence.
+The compiler defaults to `-fno-auto-inc-dec` through its installed specs,
+and SGDK's libraries are rebuilt with that default. This also protects custom
+compiler invocations; changing `EXTRA_FLAGS` does not remove the workaround.
+Do not enable `-fauto-inc-dec` in game builds while using this compiler.
+
+The test suite executes actual M68000 code with Unicorn, including SGDK's
+public Z80 upload/download functions. It checks full driver-sized copies,
+zero and odd lengths, unaligned sources and surrounding guard bytes. A separate
+negative control explicitly enables the faulty optimization and must reproduce
+the corruption. An executed far-branch test also checks that the assembler
+still receives the correct M68000 CPU setting. Both native CI architectures run
+these tests. The compiler rejects other CPU architectures and FPU/MMU options;
+the assembler is also tested to reject a 68020-only instruction. This checks
+target code and memory copy correctness, not complete console emulation or
+audible playback.
+
 Use `2.11-gcc16.2.0-binutils2.47` to select this toolchain release, `2.11` to
 track tested updates for SGDK 2.11, or `latest` for the current tested release.
 Use an image digest when exact reproducibility matters.
@@ -31,10 +50,12 @@ Use an image digest when exact reproducibility matters.
 ## Build and test locally
 
 ```sh
+python3 -m venv build/test-venv
+build/test-venv/bin/pip install -r tests/requirements.txt
 docker buildx build --platform linux/arm64 --load -t sgdk-local:arm64 .
-python3 scripts/test-image.py sgdk-local:arm64 --platform linux/arm64 --output build/test-arm64
+build/test-venv/bin/python scripts/test-image.py sgdk-local:arm64 --platform linux/arm64 --output build/test-arm64
 docker buildx build --platform linux/amd64 --load -t sgdk-local:amd64 .
-python3 scripts/test-image.py sgdk-local:amd64 --platform linux/amd64 --output build/test-amd64
+build/test-venv/bin/python scripts/test-image.py sgdk-local:amd64 --platform linux/amd64 --output build/test-amd64
 ```
 
 An opposite-architecture build uses Docker's emulation and can take longer.

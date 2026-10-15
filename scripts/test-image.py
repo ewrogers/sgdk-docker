@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+from m68k_regression import run_regression
 
 
 def main():
@@ -33,6 +34,7 @@ def main():
     assert ("aarch64" if args.platform.endswith("arm64") else "x86_64") in doctor
     assert "16.2.0" in doctor and "2.47" in doctor and "18.1" in doctor
     assert "SGDK: 2.11" in doctor
+    copy_regression = run_regression(base, output)
     run("source-access", ["sh", "-c", 'test -r /usr/local/share/sgdk/sources/gcc.tar.xz && test -r /usr/local/share/sgdk/sources/gdb.tar.xz'])
     # The generic entrypoint must preserve arguments and command failures.
     assert run("arguments", ["sh", "-c", 'printf "%s\\n" "$@"', "label", "two words", "semi;colon"]) == "two words\nsemi;colon\n"
@@ -77,7 +79,8 @@ def main():
         result = subprocess.run([*base, "build", "-C", "hello-world", "release"], stdout=log, stderr=subprocess.STDOUT)
     assert result.returncode != 0, "Compiler failures must propagate"
     report = {"passed": True, "platform": args.platform, "image_id": metadata["Id"],
-              "samples": results, "doctor": doctor, "input_sources": "Unmodified SGDK 2.11 examples bundled in the image"}
+              "samples": results, "doctor": doctor, "m68k_copy_regression": copy_regression,
+              "input_sources": "Unmodified SGDK 2.11 examples bundled in the image"}
     (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(f"Passed {args.platform}; report: {output / 'report.json'}")
 

@@ -13,6 +13,13 @@ def main():
     arm, amd = [json.loads(path.read_text()) for path in [args.arm64, args.amd64]]
     assert arm["passed"] and amd["passed"]
     assert arm["platform"] == "linux/arm64" and amd["platform"] == "linux/amd64"
+    for report in [arm, amd]:
+        regression = report.get("m68k_copy_regression", {})
+        assert regression.get("sdk_upload_download") == "passed", "Missing executed SDK copy regression"
+        assert regression.get("compiler_default") == "passed", "Missing compiler default regression"
+        assert regression.get("negative_control") == "reproduced", "Missing failing negative control"
+        assert regression.get("far_branch") == "passed", "Missing M68000 far-branch regression"
+        assert regression.get("cpu_policy") == "passed", "Missing M68000 CPU policy regression"
     for field in ["bytes", "sha256"]:
         left = {sample["sample"]: sample[field] for sample in arm["samples"]}
         right = {sample["sample"]: sample[field] for sample in amd["samples"]}
