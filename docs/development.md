@@ -36,7 +36,9 @@ The test suite executes actual M68000 code with Unicorn, including SGDK's
 public Z80 upload/download functions. It checks full driver-sized copies,
 zero and odd lengths, unaligned sources and surrounding guard bytes. A separate
 negative control explicitly enables the faulty optimization and must reproduce
-the corruption. Both native CI architectures run these tests. This checks memory
+the corruption. An executed far-branch test also checks that the assembler
+still receives the correct M68000 CPU setting. Both native CI architectures run
+these tests. This checks memory
 copy correctness, not complete console emulation or audible playback.
 
 Use `2.11-gcc16.2.0-binutils2.47` to select this toolchain release, `2.11` to

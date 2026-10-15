@@ -41,6 +41,14 @@ def run_regression(base, output):
         with (output / f"{name}.log").open("w") as log:
             subprocess.run([*base, *command], stdout=log, stderr=subprocess.STDOUT, check=True)
 
+    # Preserve GCC's assembler CPU forwarding when installing custom specs.
+    # A 68020 BRA.L is invalid on a 68000; GAS must expand far jumps safely.
+    (output / "far-branch.s").write_text(".text\n.globl _start\n_start:\n jra far\n.globl finished\nfinished:\n nop\n.space 40000\nfar:\n moveq #0,%d0\n jra finished\n")
+    run("far-branch", ["m68k-elf-gcc", "-m68000", "-nostdlib", "-Wl,-Ttext=0x10000", "-Wl,-e,_start", "far-branch.s", "-o", "far-branch.elf"])
+    run("far-branch-extract", ["sh", "-c", "m68k-elf-objcopy -O binary far-branch.elf far-branch.bin && m68k-elf-nm far-branch.elf > far-branch.nm"])
+    if execute(output / "far-branch.bin", output / "far-branch.nm"):
+        raise AssertionError("M68000 far-branch regression failed")
+
     # Exercise the actual SDK libraries through their public functions. This
     # catches a stale prebuilt library even when new project C compiles safely.
     run("z80-copy-build", ["build", "-C", "z80-copy", "release"])
@@ -75,4 +83,4 @@ int probe(void) {
         if result != expected:
             raise AssertionError(f"{name}: expected {expected}, got {result}; review GCC workaround")
     print("Passed M68000 execution: SDK upload/download, compiler default and failing negative control", flush=True)
-    return {"sdk_upload_download": "passed", "compiler_default": "passed", "negative_control": "reproduced", "emulator": "Unicorn 2.1.4 M68000"}
+    return {"sdk_upload_download": "passed", "compiler_default": "passed", "negative_control": "reproduced", "far_branch": "passed", "emulator": "Unicorn 2.1.4 M68000"}

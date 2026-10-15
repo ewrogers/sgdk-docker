@@ -6,6 +6,10 @@ import subprocess
 
 def install():
     compiler = "/opt/m68k/bin/m68k-elf-gcc"
+    specs = subprocess.check_output([compiler, "-dumpspecs"], text=True)
+    marker = "*self_spec:\n\n\n"
+    if specs.count(marker) != 1:
+        raise RuntimeError("GCC self specs changed; review the M68000 workaround")
     # A driver default covers ordinary compilation and LTO, including projects
     # that replace EXTRA_FLAGS. Explicit -fauto-inc-dec remains available for
     # reproducing the compiler defect in the regression test.
@@ -13,7 +17,7 @@ def install():
     target = library.parent / "specs"
     if target.exists():
         raise RuntimeError("Compiler already has custom specs; review before replacing them")
-    target.write_text("*self_spec:\n%{!fauto-inc-dec:-fno-auto-inc-dec}\n")
+    target.write_text(specs.replace(marker, "*self_spec:\n%{!fauto-inc-dec:-fno-auto-inc-dec}\n\n"))
 
 
 if __name__ == "__main__":
