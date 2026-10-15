@@ -10,7 +10,7 @@ import sys
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image", default="ewrogers/sgdk")
-    parser.add_argument("--version", default="2.11-gcc16.2.0-binutils2.47")
+    parser.add_argument("--version", default="2.11-gcc16.2.0-binutils2.47-r2")
     parser.add_argument("--arm64", type=Path, required=True, help="Passed ARM64 report.json")
     parser.add_argument("--amd64", type=Path, required=True, help="Passed AMD64 report.json")
     args = parser.parse_args()

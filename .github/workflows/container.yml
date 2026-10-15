@@ -22,7 +22,7 @@ permissions:
 
 env:
   IMAGE: ewrogers/sgdk
-  VERSION: 2.11-gcc16.2.0-binutils2.47
+  VERSION: 2.11-gcc16.2.0-binutils2.47-r2
 
 jobs:
   build:
@@ -51,7 +51,10 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,scope=${{ matrix.arch }},mode=max
       - name: Test tools and fresh upstream examples
-        run: python3 scripts/test-image.py sgdk-ci:${{ matrix.arch }} --platform linux/${{ matrix.arch }} --output build/test
+        run: |
+          python3 -m venv build/test-venv
+          build/test-venv/bin/pip install -r tests/requirements.txt
+          build/test-venv/bin/python scripts/test-image.py sgdk-ci:${{ matrix.arch }} --platform linux/${{ matrix.arch }} --output build/test
       - name: Keep test reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

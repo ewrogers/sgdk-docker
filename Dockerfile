@@ -12,6 +12,10 @@ COPY sources.lock.json /build/sources.lock.json
 COPY scripts/fetch-sources.py scripts/build-compiler.sh /build/
 RUN /build/build-compiler.sh
 
+FROM compiler AS compatible-compiler
+COPY scripts/install-compiler-workarounds.py /build/
+RUN python3 /build/install-compiler-workarounds.py
+
 FROM compiler AS debugger
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libreadline-dev libncurses-dev python3-dev \
@@ -24,7 +28,7 @@ FROM debugger AS packed-tools
 COPY scripts/strip-host-tools.py /build/
 RUN python3 /build/strip-host-tools.py
 
-FROM compiler AS sgdk
+FROM compatible-compiler AS sgdk
 COPY --from=java /opt/java/openjdk /opt/java/openjdk
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH=/opt/m68k/bin:/opt/java/openjdk/bin:/opt/sgdk/bin:$PATH
@@ -49,6 +53,8 @@ COPY --from=debugger /opt/sources/gdb.tar.xz /usr/local/share/sgdk/sources/gdb.t
 COPY sources.lock.json /usr/local/share/sgdk/sources.lock.json
 COPY debugger.lock.json /usr/local/share/sgdk/debugger.lock.json
 COPY scripts/fetch-sources.py scripts/build-compiler.sh scripts/build-sgdk.sh scripts/build-debugger.sh scripts/patch-sgdk.py /usr/local/share/sgdk/recipes/
+COPY scripts/install-compiler-workarounds.py /usr/local/share/sgdk/recipes/
+RUN python3 /usr/local/share/sgdk/recipes/install-compiler-workarounds.py
 COPY scripts/entrypoint.sh /usr/local/bin/sgdk
 COPY scripts/doctor.sh /usr/local/bin/sgdk-doctor
 RUN chmod a+r /usr/local/share/sgdk/sources/*
@@ -59,7 +65,7 @@ ENV EXTRA_FLAGS=-std=gnu17
 LABEL org.opencontainers.image.title="SGDK toolchain" \
     org.opencontainers.image.description="Native ARM64 and AMD64 SGDK development tools" \
     org.opencontainers.image.source="https://github.com/ewrogers/sgdk-docker" \
-    org.opencontainers.image.version="2.11-gcc16.2.0-binutils2.47"
+    org.opencontainers.image.version="2.11-gcc16.2.0-binutils2.47-r2"
 USER sgdk
 WORKDIR /workspace
 ENTRYPOINT ["/usr/local/bin/sgdk"]
