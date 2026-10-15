@@ -65,7 +65,7 @@ ENV EXTRA_FLAGS=-std=gnu17
 LABEL org.opencontainers.image.title="SGDK toolchain" \
     org.opencontainers.image.description="Native ARM64 and AMD64 SGDK development tools" \
     org.opencontainers.image.source="https://github.com/ewrogers/sgdk-docker" \
-    org.opencontainers.image.version="2.11-gcc16.2.0-binutils2.47-r2"
+    org.opencontainers.image.version="2.11-gcc16.2.0-binutils2.47"
 USER sgdk
 WORKDIR /workspace
 ENTRYPOINT ["/usr/local/bin/sgdk"]

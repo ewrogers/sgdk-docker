@@ -39,7 +39,7 @@ negative control explicitly enables the faulty optimization and must reproduce
 the corruption. Both native CI architectures run these tests. This checks memory
 copy correctness, not complete console emulation or audible playback.
 
-Use `2.11-gcc16.2.0-binutils2.47-r2` to select this toolchain release, `2.11` to
+Use `2.11-gcc16.2.0-binutils2.47` to select this toolchain release, `2.11` to
 track tested updates for SGDK 2.11, or `latest` for the current tested release.
 Use an image digest when exact reproducibility matters.
 

@@ -22,7 +22,7 @@ permissions:
 
 env:
   IMAGE: ewrogers/sgdk
-  VERSION: 2.11-gcc16.2.0-binutils2.47-r2
+  VERSION: 2.11-gcc16.2.0-binutils2.47
 
 jobs:
   build:
