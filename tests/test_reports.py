@@ -19,7 +19,7 @@ class ReportRequirements(unittest.TestCase):
 
     def reports(self):
         common = {"passed": True, "samples": [{"sample": str(i), "bytes": 131072, "sha256": str(i)} for i in range(5)],
-                  "m68k_copy_regression": {"sdk_upload_download": "passed", "compiler_default": "passed", "negative_control": "reproduced", "far_branch": "passed"}}
+                  "m68k_copy_regression": {"sdk_upload_download": "passed", "compiler_default": "passed", "negative_control": "reproduced", "far_branch": "passed", "cpu_policy": "passed"}}
         return [{**common, "platform": platform} for platform in ["linux/arm64", "linux/amd64"]]
 
     def test_complete_reports_are_accepted(self):

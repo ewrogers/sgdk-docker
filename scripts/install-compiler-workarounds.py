@@ -17,7 +17,22 @@ def install():
     target = library.parent / "specs"
     if target.exists():
         raise RuntimeError("Compiler already has custom specs; review before replacing them")
-    target.write_text(specs.replace(marker, "*self_spec:\n%{!fauto-inc-dec:-fno-auto-inc-dec}\n\n"))
+    policy = (
+        "%{mcpu=*:%{!mcpu=68000:%eThis toolchain targets the Mega Drive 68000 CPU}} "
+        "%{march=*:%{!march=68000:%eThis toolchain targets the Mega Drive 68000 architecture}} "
+        "%{m68020-40|m68020-60|m68881|m68851:%eThe Mega Drive has a 68000 without an FPU or MMU}} "
+        "%{!mcpu=*:-mcpu=68000} %{!fauto-inc-dec:-fno-auto-inc-dec}"
+    )
+    target.write_text(specs.replace(marker, "*self_spec:\n" + policy + "\n\n"))
+    # GCC and command-line assembly use two installed paths to GAS. Route both
+    # through the same 68000 default and CPU-option check.
+    assembler = Path("/opt/m68k/bin/m68k-elf-as")
+    assembler.rename(assembler.with_name("m68k-elf-as.real"))
+    assembler.write_bytes(Path(__file__).with_name("m68000-as.sh").read_bytes())
+    assembler.chmod(0o755)
+    backend = Path("/opt/m68k/m68k-elf/bin/as")
+    backend.unlink()
+    backend.symlink_to("../../bin/m68k-elf-as")
 
 
 if __name__ == "__main__":

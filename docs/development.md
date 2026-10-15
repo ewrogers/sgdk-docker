@@ -38,8 +38,10 @@ zero and odd lengths, unaligned sources and surrounding guard bytes. A separate
 negative control explicitly enables the faulty optimization and must reproduce
 the corruption. An executed far-branch test also checks that the assembler
 still receives the correct M68000 CPU setting. Both native CI architectures run
-these tests. This checks memory
-copy correctness, not complete console emulation or audible playback.
+these tests. The compiler rejects other CPU architectures and FPU/MMU options;
+the assembler is also tested to reject a 68020-only instruction. This checks
+target code and memory copy correctness, not complete console emulation or
+audible playback.
 
 Use `2.11-gcc16.2.0-binutils2.47` to select this toolchain release, `2.11` to
 track tested updates for SGDK 2.11, or `latest` for the current tested release.

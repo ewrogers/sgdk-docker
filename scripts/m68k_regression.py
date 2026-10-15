@@ -41,10 +41,28 @@ def run_regression(base, output):
         with (output / f"{name}.log").open("w") as log:
             subprocess.run([*base, *command], stdout=log, stderr=subprocess.STDOUT, check=True)
 
+    (output / "cpu-probe.c").write_text("int answer(void) { return 42; }\n")
+    for option in ["-m68010", "-m68020", "-mcpu=68040", "-march=68020", "-m68881"]:
+        with (output / f"reject{option}.log").open("w") as log:
+            result = subprocess.run([*base, "m68k-elf-gcc", option, "-c", "cpu-probe.c", "-o", "invalid.o"], stdout=log, stderr=subprocess.STDOUT)
+        if result.returncode == 0:
+            raise AssertionError(f"Compiler accepted incompatible CPU option {option}")
+    (output / "invalid-cpu.s").write_text(".text\n extb.l %d0\n")
+    for name, command in [
+        ("compiler", ["m68k-elf-gcc", "-c", "invalid-cpu.s", "-o", "invalid.o"]),
+        ("assembler", ["m68k-elf-as", "invalid-cpu.s", "-o", "invalid.o"]),
+        ("assembler-cpu", ["m68k-elf-as", "-m68020", "invalid-cpu.s", "-o", "invalid.o"]),
+        ("assembler-override", ["m68k-elf-gcc", "-Wa,-m68020", "-c", "invalid-cpu.s", "-o", "invalid.o"]),
+    ]:
+        with (output / f"reject-68020-{name}.log").open("w") as log:
+            result = subprocess.run([*base, *command], stdout=log, stderr=subprocess.STDOUT)
+        if result.returncode == 0:
+            raise AssertionError(f"{name} accepted a 68020-only instruction or CPU option")
+
     # Preserve GCC's assembler CPU forwarding when installing custom specs.
     # A 68020 BRA.L is invalid on a 68000; GAS must expand far jumps safely.
     (output / "far-branch.s").write_text(".text\n.globl _start\n_start:\n jra far\n.globl finished\nfinished:\n nop\n.space 40000\nfar:\n moveq #0,%d0\n jra finished\n")
-    run("far-branch", ["m68k-elf-gcc", "-m68000", "-nostdlib", "-Wl,-Ttext=0x10000", "-Wl,-e,_start", "far-branch.s", "-o", "far-branch.elf"])
+    run("far-branch", ["m68k-elf-gcc", "-nostdlib", "-Wl,-Ttext=0x10000", "-Wl,-e,_start", "far-branch.s", "-o", "far-branch.elf"])
     run("far-branch-extract", ["sh", "-c", "m68k-elf-objcopy -O binary far-branch.elf far-branch.bin && m68k-elf-nm far-branch.elf > far-branch.nm"])
     if execute(output / "far-branch.bin", output / "far-branch.nm"):
         raise AssertionError("M68000 far-branch regression failed")
@@ -83,4 +101,4 @@ int probe(void) {
         if result != expected:
             raise AssertionError(f"{name}: expected {expected}, got {result}; review GCC workaround")
     print("Passed M68000 execution: SDK upload/download, compiler default and failing negative control", flush=True)
-    return {"sdk_upload_download": "passed", "compiler_default": "passed", "negative_control": "reproduced", "far_branch": "passed", "emulator": "Unicorn 2.1.4 M68000"}
+    return {"sdk_upload_download": "passed", "compiler_default": "passed", "negative_control": "reproduced", "far_branch": "passed", "cpu_policy": "passed", "emulator": "Unicorn 2.1.4 M68000"}

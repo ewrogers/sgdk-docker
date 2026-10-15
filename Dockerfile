@@ -13,7 +13,7 @@ COPY scripts/fetch-sources.py scripts/build-compiler.sh /build/
 RUN /build/build-compiler.sh
 
 FROM compiler AS compatible-compiler
-COPY scripts/install-compiler-workarounds.py /build/
+COPY scripts/install-compiler-workarounds.py scripts/m68000-as.sh /build/
 RUN python3 /build/install-compiler-workarounds.py
 
 FROM compiler AS debugger
@@ -53,7 +53,7 @@ COPY --from=debugger /opt/sources/gdb.tar.xz /usr/local/share/sgdk/sources/gdb.t
 COPY sources.lock.json /usr/local/share/sgdk/sources.lock.json
 COPY debugger.lock.json /usr/local/share/sgdk/debugger.lock.json
 COPY scripts/fetch-sources.py scripts/build-compiler.sh scripts/build-sgdk.sh scripts/build-debugger.sh scripts/patch-sgdk.py /usr/local/share/sgdk/recipes/
-COPY scripts/install-compiler-workarounds.py /usr/local/share/sgdk/recipes/
+COPY scripts/install-compiler-workarounds.py scripts/m68000-as.sh /usr/local/share/sgdk/recipes/
 RUN python3 /usr/local/share/sgdk/recipes/install-compiler-workarounds.py
 COPY scripts/entrypoint.sh /usr/local/bin/sgdk
 COPY scripts/doctor.sh /usr/local/bin/sgdk-doctor
