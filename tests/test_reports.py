@@ -19,7 +19,7 @@ class ReportRequirements(unittest.TestCase):
 
     def reports(self):
         common = {"passed": True, "samples": [{"sample": str(i), "bytes": 131072, "sha256": str(i)} for i in range(5)],
-                  "m68k_copy_regression": {"sdk_upload_download": "passed", "compiler_default": "passed", "negative_control": "reproduced", "far_branch": "passed", "cpu_policy": "passed"}}
+                  "m68k_copy_regression": {"sdk_upload_download": "passed", "compiler_default": "passed", "negative_control": "reproduced", "far_branch": "passed", "cpu_policy": "passed", "sdk_vdp_buffers": "passed", "aliasing_default": "passed", "aliasing_negative_control": "reproduced"}}
         return [{**common, "platform": platform} for platform in ["linux/arm64", "linux/amd64"]]
 
     def test_complete_reports_are_accepted(self):
@@ -36,6 +36,18 @@ class ReportRequirements(unittest.TestCase):
         arm, amd = self.reports()
         amd["m68k_copy_regression"] = {**amd["m68k_copy_regression"], "negative_control": "passed"}
         self.assertNotEqual(self.compare(arm, amd).returncode, 0)
+
+    def test_missing_or_failed_aliasing_checks_cannot_publish(self):
+        for field in ["sdk_vdp_buffers", "aliasing_default", "aliasing_negative_control"]:
+            for value in [None, "failed"]:
+                with self.subTest(field=field, value=value):
+                    arm, amd = self.reports()
+                    amd["m68k_copy_regression"] = dict(amd["m68k_copy_regression"])
+                    if value is None:
+                        del amd["m68k_copy_regression"][field]
+                    else:
+                        amd["m68k_copy_regression"][field] = value
+                    self.assertNotEqual(self.compare(arm, amd).returncode, 0)
 
 
 if __name__ == "__main__":

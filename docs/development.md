@@ -32,6 +32,22 @@ and SGDK's libraries are rebuilt with that default. This also protects custom
 compiler invocations; changing `EXTRA_FLAGS` does not remove the workaround.
 Do not enable `-fauto-inc-dec` in game builds while using this compiler.
 
+The compiler also defaults to `-fno-strict-aliasing`. SGDK 2.11's CPU VDP
+transfers read 16-bit palette and tile buffers through 32-bit pointers. Strict
+aliasing can remove writes needed by those transfers, leaving missing text or
+incorrect colors under optimization. This is an SGDK access-pattern
+compatibility setting, not a demonstrated GCC defect. It applies to rebuilt
+SDK libraries, project compilation and LTO even if a project replaces
+`EXTRA_FLAGS`. Do not enable `-fstrict-aliasing` for SGDK games.
+
+Regression tests record every VDP data-port write from the real SDK transfer
+routine and compare palette, text, odd-length and word-offset buffers. A small
+type-punning probe separately verifies the default and explicitly enables
+strict aliasing as a failing negative control. Publication requires these
+checks on both architectures. See GCC's
+[strict-aliasing rules](https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html#index-fstrict-aliasing)
+and SGDK's [CPU transfer implementation](https://github.com/Stephane-D/SGDK/blob/v2.11/src/dma.c).
+
 The test suite executes actual M68000 code with Unicorn, including SGDK's
 public Z80 upload/download functions. It checks full driver-sized copies,
 zero and odd lengths, unaligned sources and surrounding guard bytes. A separate

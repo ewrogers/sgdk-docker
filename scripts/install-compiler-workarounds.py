@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Disable GCC 16.2's incorrect M68000 shared-pointer auto-increment fold."""
+"""Install SGDK buffer compatibility and safe M68000 compiler defaults."""
 from pathlib import Path
 import subprocess
 
@@ -21,7 +21,11 @@ def install():
         "%{mcpu=*:%{!mcpu=68000:%eThis toolchain targets the Mega Drive 68000 CPU}} "
         "%{march=*:%{!march=68000:%eThis toolchain targets the Mega Drive 68000 architecture}} "
         "%{m68020-40|m68020-60|m68881|m68851:%eThe Mega Drive has a 68000 without an FPU or MMU} "
-        "%{!mcpu=*:-mcpu=68000} %{!fauto-inc-dec:-fno-auto-inc-dec}"
+        "%{!mcpu=*:-mcpu=68000} %{!fauto-inc-dec:-fno-auto-inc-dec} "
+        # SGDK's CPU VDP transfers read u16 buffers through u32 pointers.
+        # Apply to SDK libraries, project code and LTO, not just EXTRA_FLAGS.
+        # Explicit opt-in is retained for diagnosis and negative controls.
+        "%{!fstrict-aliasing:-fno-strict-aliasing}"
     )
     target.write_text(specs.replace(marker, "*self_spec:\n" + policy + "\n\n"))
     # GCC and command-line assembly use two installed paths to GAS. Route both
