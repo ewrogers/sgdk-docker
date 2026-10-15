@@ -1,11 +1,11 @@
-"""Execute target machine code to catch the Z80 byte-copy miscompilation."""
+"""Execute target code to check SGDK transfers and M68000 compiler policy."""
 from pathlib import Path
 import shutil
 import subprocess
 
 
-def execute(binary, symbols, *, rom=False):
-    from unicorn import Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN
+def execute(binary, symbols, *, rom=False, vdp_words=None):
+    from unicorn import Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN, UC_HOOK_MEM_WRITE
     from unicorn.m68k_const import UC_CPU_M68K_M68000, UC_M68K_REG_A7, UC_M68K_REG_D0, UC_M68K_REG_PC, UC_M68K_REG_SR
 
     names = {}
@@ -17,6 +17,16 @@ def execute(binary, symbols, *, rom=False):
     machine.ctl_set_cpu_model(UC_CPU_M68K_M68000)
     machine.mem_map(0, 0x400000)
     machine.mem_map(0xA00000, 0x20000)
+    machine.mem_map(0xC00000, 0x1000)
+    if vdp_words is not None:
+        def record_vdp(machine, access, address, size, value, data):
+            if address == 0xC00000:
+                if size not in (2, 4):
+                    raise AssertionError(f"Unexpected VDP data write size: {size}")
+                value &= (1 << (size * 8)) - 1
+                vdp_words.extend(int.from_bytes(value.to_bytes(size, "big")[i:i + 2], "big")
+                                 for i in range(0, size, 2))
+        machine.hook_add(UC_HOOK_MEM_WRITE, record_vdp)
     machine.mem_map(0xE0FF0000, 0x10000)
     machine.mem_write(0 if rom else 0x10000, binary.read_bytes())
     machine.mem_write(0xA00000, b"\xcc" * 8192)
@@ -29,7 +39,7 @@ def execute(binary, symbols, *, rom=False):
         raise AssertionError("Expected one SGDK main entry point")
     machine.emu_start(entries[0] if rom else names["_start"], end, count=2_000_000)
     if machine.reg_read(UC_M68K_REG_PC) != end:
-        raise AssertionError("M68000 byte-copy test did not return within its instruction limit")
+        raise AssertionError("M68000 regression did not return within its instruction limit")
     return machine.reg_read(UC_M68K_REG_D0)
 
 
@@ -80,6 +90,31 @@ def run_regression(base, output):
     if result:
         raise AssertionError(f"SGDK Z80 upload/download corrupted memory (case {result})")
 
+    # Real SGDK u16 palette/text buffers, including a word-aligned offset and
+    # the 16-bit remainder path. Record the values written to the VDP port.
+    shutil.copytree(fixture.parent / "vdp-buffers", output / "vdp-buffers")
+    run("vdp-buffers-build", ["build", "-C", "vdp-buffers", "release", "EXTRA_FLAGS=-std=gnu17"])
+    run("vdp-buffers-symbols", ["sh", "-c", "m68k-elf-nm vdp-buffers/out/rom.out > vdp-buffers/symbols.txt"])
+    words = []
+    result = execute(output / "vdp-buffers/out/rom.bin", output / "vdp-buffers/symbols.txt", rom=True, vdp_words=words)
+    expected = ([0x200 + i * 2 for i in range(64)] + [0xA000 + i for i in range(33)]
+                + [0xA000 + i for i in range(1, 18)])
+    if result or words != expected:
+        raise AssertionError("SGDK palette/text CPU transfer changed buffer contents")
+
+    # A small intentional type-punning negative control isolates the policy
+    # from SDK changes. Do not treat this as a GCC bug: strict aliasing permits
+    # GCC to assume these differently typed pointers do not alias.
+    shutil.copyfile(fixture.parent / "alias-probe.c", output / "alias-probe.c")
+    (output / "alias-start.s").write_text(".text\n.globl _start\n_start:\n jsr probe\n.globl finished\nfinished:\n nop\n")
+    for name, flags, expected_result in [("alias-default", [], 0), ("alias-negative-control", ["-fstrict-aliasing"], 1)]:
+        run(name, ["m68k-elf-gcc", "-std=c17", "-O3", "-flto", "-nostdlib",
+                   "-Wl,-Ttext=0x10000", "-Wl,-e,_start", "alias-start.s", "alias-probe.c", "-o", f"{name}.elf", *flags])
+        run(f"{name}-extract", ["sh", "-c", f"m68k-elf-objcopy -O binary {name}.elf {name}.bin && m68k-elf-nm {name}.elf > {name}.nm"])
+        result = execute(output / f"{name}.bin", output / f"{name}.nm")
+        if result != expected_result:
+            raise AssertionError(f"{name}: expected {expected_result}, got {result}; review aliasing policy")
+
     # Also guard the compiler default independently of SGDK. The explicit
     # opt-in is a negative control: GCC 16.2 must reproduce the original bug.
     (output / "copy-probe.c").write_text('''
@@ -105,5 +140,5 @@ int probe(void) {
         result = execute(output / f"{name}.bin", output / f"{name}.nm")
         if result != expected:
             raise AssertionError(f"{name}: expected {expected}, got {result}; review GCC workaround")
-    print("Passed M68000 execution: SDK upload/download, compiler default and failing negative control", flush=True)
-    return {"sdk_upload_download": "passed", "compiler_default": "passed", "negative_control": "reproduced", "far_branch": "passed", "cpu_policy": "passed", "emulator": "Unicorn 2.1.4 M68000"}
+    print("Passed M68000 execution: SDK Z80/VDP transfers, compiler defaults and failing negative controls", flush=True)
+    return {"sdk_upload_download": "passed", "compiler_default": "passed", "negative_control": "reproduced", "far_branch": "passed", "cpu_policy": "passed", "sdk_vdp_buffers": "passed", "aliasing_default": "passed", "aliasing_negative_control": "reproduced", "emulator": "Unicorn 2.1.4 M68000"}

@@ -8,6 +8,7 @@ m68k-elf-ld --version | head -1
 java -version
 m68k-elf-gdb --version | head -1
 printf 'C flags: %s\n' "$EXTRA_FLAGS"
+printf 'Compiler defaults: 68000, -fno-auto-inc-dec, -fno-strict-aliasing\n'
 for tool in make git python3 m68k-elf-as m68k-elf-ar m68k-elf-objcopy m68k-elf-gdb bintos sjasm xgmtool convsym mac68k; do
     command -v "$tool"
 done

@@ -20,6 +20,9 @@ def main():
         assert regression.get("negative_control") == "reproduced", "Missing failing negative control"
         assert regression.get("far_branch") == "passed", "Missing M68000 far-branch regression"
         assert regression.get("cpu_policy") == "passed", "Missing M68000 CPU policy regression"
+        assert regression.get("sdk_vdp_buffers") == "passed", "Missing executed SDK VDP buffer regression"
+        assert regression.get("aliasing_default") == "passed", "Missing aliasing default regression"
+        assert regression.get("aliasing_negative_control") == "reproduced", "Missing aliasing negative control"
     for field in ["bytes", "sha256"]:
         left = {sample["sample"]: sample[field] for sample in arm["samples"]}
         right = {sample["sample"]: sample[field] for sample in amd["samples"]}
