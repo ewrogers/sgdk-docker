@@ -20,7 +20,7 @@ def install():
     policy = (
         "%{mcpu=*:%{!mcpu=68000:%eThis toolchain targets the Mega Drive 68000 CPU}} "
         "%{march=*:%{!march=68000:%eThis toolchain targets the Mega Drive 68000 architecture}} "
-        "%{m68020-40|m68020-60|m68881|m68851:%eThe Mega Drive has a 68000 without an FPU or MMU}} "
+        "%{m68020-40|m68020-60|m68881|m68851:%eThe Mega Drive has a 68000 without an FPU or MMU} "
         "%{!mcpu=*:-mcpu=68000} %{!fauto-inc-dec:-fno-auto-inc-dec}"
     )
     target.write_text(specs.replace(marker, "*self_spec:\n" + policy + "\n\n"))

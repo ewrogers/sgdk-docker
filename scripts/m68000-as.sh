@@ -10,4 +10,4 @@ for argument in "$@"; do
             ;;
     esac
 done
-exec /opt/m68k/bin/m68k-elf-as.real -m68000 "$@"
+exec /opt/m68k/bin/m68k-elf-as.real -m68000 -mno-68881 -mno-68851 "$@"

@@ -58,6 +58,11 @@ def run_regression(base, output):
             result = subprocess.run([*base, *command], stdout=log, stderr=subprocess.STDOUT)
         if result.returncode == 0:
             raise AssertionError(f"{name} accepted a 68020-only instruction or CPU option")
+    (output / "invalid-fpu.s").write_text(".text\n fnop\n")
+    with (output / "reject-fpu-instruction.log").open("w") as log:
+        result = subprocess.run([*base, "m68k-elf-as", "invalid-fpu.s", "-o", "invalid.o"], stdout=log, stderr=subprocess.STDOUT)
+    if result.returncode == 0:
+        raise AssertionError("Assembler accepted an FPU instruction")
 
     # Preserve GCC's assembler CPU forwarding when installing custom specs.
     # A 68020 BRA.L is invalid on a 68000; GAS must expand far jumps safely.
